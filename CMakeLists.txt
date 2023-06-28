@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.19)
 
 set(PROJNAME "vulkan-pathtracer")
 project(${PROJNAME})
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 
 find_package(Vulkan REQUIRED)
 

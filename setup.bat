@@ -14,5 +14,5 @@ if errorlevel 1 (
     echo Cannot find vcpkg on PATH! Please install vcpkg and set the PATH, or install dependencies manually.
     exit /b 1
 ) ELSE (
-    vcpkg install quill tinyobjloader vk-bootstrap stb glm fastgltf --triplet x64-windows
+    vcpkg install spdlog tinyobjloader vk-bootstrap stb glm fastgltf --triplet x64-windows
 )

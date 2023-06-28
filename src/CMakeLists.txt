@@ -12,7 +12,7 @@ target_include_directories(${PROJNAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 # ###################################
 find_package(Vulkan REQUIRED)
 
-find_package(quill CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 
 find_package(tinyobjloader CONFIG REQUIRED)
 
@@ -27,15 +27,21 @@ find_package(fastgltf CONFIG REQUIRED)
 target_link_libraries(${PROJNAME}
     vk-bootstrap::vk-bootstrap
     tinyobjloader::tinyobjloader
-    ${Stb_INCULDE_DIR}
-    quill::quill
+    spdlog::spdlog_header_only
     glm::glm
     fastgltf::fastgltf
+    ${Stb_INCULDE_DIR}
 )
 
 configure_third_party_libs(${PROJNAME})
 
 target_link_libraries(vulkan-pathtracer Vulkan::Vulkan slang)
+
+target_compile_definitions(
+    vulkan-pathtracer PUBLIC
+    $<$<CONFIG:Release>: NDEBUG> # Release
+    $<$<CONFIG:Debug>: _DEBUG> # Debug
+)
 
 # ###########################
 set(SHADER_EXTENSION_REGEX "\.(slang|slangh|hlsli|hlsl)$")
