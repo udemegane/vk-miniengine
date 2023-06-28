@@ -1,8 +1,22 @@
 #include <SDL.h>
 #include <SDL_vulkan.h>
+
 #include <VkEngine.h>
 #include <VkInitializers.h>
 #include <VkTypes.h>
+
+#include "VkBootstrap.h"
+#include <array>
+#include <quill/Quill.h>
+
+#define VK_CHECK(x)                                                                                                    \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        VkResult err = x;                                                                                              \
+        if (err)                                                                                                       \
+        {                                                                                                              \
+        }                                                                                                              \
+    } while (0)
 
 void VkEngine::init()
 {

@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "*.latex": "latex",
+        "*.cpp": "cpp",
+        "*.slang": "slang",
+        "*.slangh": "slang",
+    },
+    "cmake.configureOnEdit": false,
+}
