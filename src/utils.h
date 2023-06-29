@@ -5,6 +5,6 @@
         VkResult err = x;                                                                                              \
         if (err)                                                                                                       \
         {                                                                                                              \
-            std::cout << "Detected Critical Vulkan error: " << err << "\n"                                             \
+            std::cout << "Detected Critical Vulkan error: " << err << "\n";                                            \
         }                                                                                                              \
     } while (0)
