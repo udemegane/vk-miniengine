@@ -24,12 +24,15 @@ find_package(glm CONFIG REQUIRED)
 
 find_package(fastgltf CONFIG REQUIRED)
 
+find_package(magic_enum CONFIG REQUIRED)
+
 target_link_libraries(${PROJNAME}
     vk-bootstrap::vk-bootstrap
     tinyobjloader::tinyobjloader
     spdlog::spdlog_header_only
     glm::glm
     fastgltf::fastgltf
+    magic_enum::magic_enum
     ${Stb_INCULDE_DIR}
 )
 

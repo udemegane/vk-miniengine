@@ -1,11 +1,19 @@
 #pragma once
 #include <VkTypes.h>
+#include <shaderCompiler.h>
+#include <slang-com-helper.h>
+#include <slang-com-ptr.h>
+#include <slang.h>
+#include <string>
 #include <vector>
+
 class VkEngine
 {
   public:
+    VkEngine(SlangShaderCompiler compiler, uint32_t width, uint32_t height);
     bool isInitialized{false};
     int frameNumber{0};
+    SlangShaderCompiler compiler;
     VkExtent2D windowExtent{1600, 900};
     struct SDL_Window *window{nullptr};
     void init(bool useOffscreen = false);
@@ -45,4 +53,13 @@ class VkEngine
     void initDefaultRenderPass();
     void initFrameBuffers();
     void initSyncStructures();
+    void initPipelines();
+    VkShaderModule loadShaderModule(std::string moduleName, std::string entryName);
+};
+
+class PipelineBuilder
+{
+  public:
+    std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+    VkPipelineVertexInputStateCreateInfo vertexInputInfo;
 };

@@ -7,8 +7,17 @@
 #include <utils.h>
 
 #include "VkBootstrap.h"
-#include <array>
+#include <slang-com-helper.h>
 #include <spdlog/spdlog.h>
+
+#include <array>
+#include <filesystem>
+
+VkEngine::VkEngine(SlangShaderCompiler compiler, uint32_t width, uint32_t height)
+{
+    this->compiler = compiler;
+    windowExtent = VkExtent2D{width, height};
+}
 
 void VkEngine::init(bool useOffscreen)
 {
@@ -98,11 +107,11 @@ void VkEngine::initCommands()
     VkCommandPoolCreateInfo commandPoolInfo =
         vkinit::commandPoolCreateInfo(_graphicsQueueFamily, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 
-    VK_CHECK(vkCreateCommandPool(_device, &commandPoolInfo, nullptr, &_commandPool));
+    abortOnFail(vkCreateCommandPool(_device, &commandPoolInfo, nullptr, &_commandPool));
 
     VkCommandBufferAllocateInfo cmdAllocInfo = vkinit::commandBufferAllocateInfo(_commandPool, 1);
 
-    VK_CHECK(vkAllocateCommandBuffers(_device, &cmdAllocInfo, &_mainCommandBuffer));
+    abortOnFail(vkAllocateCommandBuffers(_device, &cmdAllocInfo, &_mainCommandBuffer));
 }
 
 void VkEngine::initDefaultRenderPass()
@@ -133,7 +142,7 @@ void VkEngine::initDefaultRenderPass()
     renderPassInfo.subpassCount = 1;
     renderPassInfo.pSubpasses = &subpass;
 
-    VK_CHECK(vkCreateRenderPass(_device, &renderPassInfo, nullptr, &_renderPass));
+    abortOnFail(vkCreateRenderPass(_device, &renderPassInfo, nullptr, &_renderPass));
 }
 
 void VkEngine::initFrameBuffers()
@@ -155,7 +164,7 @@ void VkEngine::initFrameBuffers()
     for (int i = 0; i < swapchainImageCount; i++)
     {
         fbCreateInfo.pAttachments = &_swapchainImageViews[i];
-        VK_CHECK(vkCreateFramebuffer(_device, &fbCreateInfo, nullptr, &_framebuffers[i]));
+        abortOnFail(vkCreateFramebuffer(_device, &fbCreateInfo, nullptr, &_framebuffers[i]));
     }
 }
 
@@ -166,15 +175,21 @@ void VkEngine::initSyncStructures()
     fenceCreateInfo.pNext = nullptr;
 
     fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-    VK_CHECK(vkCreateFence(_device, &fenceCreateInfo, nullptr, &_renderFence));
+    abortOnFail(vkCreateFence(_device, &fenceCreateInfo, nullptr, &_renderFence));
 
     VkSemaphoreCreateInfo semaphoreCreateInfo = {};
     semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
     semaphoreCreateInfo.pNext = nullptr;
     semaphoreCreateInfo.flags = 0;
 
-    VK_CHECK(vkCreateSemaphore(_device, &semaphoreCreateInfo, nullptr, &_presentSemaphore));
-    VK_CHECK(vkCreateSemaphore(_device, &semaphoreCreateInfo, nullptr, &_renderSemaphore));
+    abortOnFail(vkCreateSemaphore(_device, &semaphoreCreateInfo, nullptr, &_presentSemaphore));
+    abortOnFail(vkCreateSemaphore(_device, &semaphoreCreateInfo, nullptr, &_renderSemaphore));
+}
+
+void VkEngine::initPipelines()
+{
+    VkShaderModule triangleFragShader = loadShaderModule("triangle", "fsMain");
+    VkShaderModule triangleVertShader = loadShaderModule("triangle", "vsMain");
 }
 
 void VkEngine::cleanup()
@@ -229,13 +244,13 @@ void VkEngine::run()
 
 void VkEngine::draw()
 {
-    VK_CHECK(vkWaitForFences(_device, 1, &_renderFence, true, 1e9));
-    VK_CHECK(vkResetFences(_device, 1, &_renderFence));
+    abortOnFail(vkWaitForFences(_device, 1, &_renderFence, true, 1e9));
+    abortOnFail(vkResetFences(_device, 1, &_renderFence));
 
     uint32_t swapchainImageIndex;
-    VK_CHECK(vkAcquireNextImageKHR(_device, _swapchain, 1e9, _presentSemaphore, nullptr, &swapchainImageIndex));
+    abortOnFail(vkAcquireNextImageKHR(_device, _swapchain, 1e9, _presentSemaphore, nullptr, &swapchainImageIndex));
 
-    VK_CHECK(vkResetCommandBuffer(_mainCommandBuffer, 0));
+    abortOnFail(vkResetCommandBuffer(_mainCommandBuffer, 0));
 
     VkCommandBuffer cmd = _mainCommandBuffer;
     VkCommandBufferBeginInfo cmdBeginInfo = {};
@@ -245,7 +260,7 @@ void VkEngine::draw()
     cmdBeginInfo.pInheritanceInfo = nullptr;
     cmdBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-    VK_CHECK(vkBeginCommandBuffer(cmd, &cmdBeginInfo));
+    abortOnFail(vkBeginCommandBuffer(cmd, &cmdBeginInfo));
     VkClearValue clearValue;
     float flash = abs(sin(frameNumber / 120.f));
     clearValue = {{0.f, 0.f, flash, 1.0f}};
@@ -264,7 +279,7 @@ void VkEngine::draw()
     vkCmdBeginRenderPass(cmd, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
 
     vkCmdEndRenderPass(cmd);
-    VK_CHECK(vkEndCommandBuffer(cmd));
+    abortOnFail(vkEndCommandBuffer(cmd));
 
     VkSubmitInfo submit = {};
     submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -280,7 +295,7 @@ void VkEngine::draw()
     submit.commandBufferCount = 1;
     submit.pCommandBuffers = &cmd;
 
-    VK_CHECK(vkQueueSubmit(_graphicsQueue, 1, &submit, _renderFence));
+    abortOnFail(vkQueueSubmit(_graphicsQueue, 1, &submit, _renderFence));
 
     VkPresentInfoKHR presentInfo = {};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -290,8 +305,25 @@ void VkEngine::draw()
     presentInfo.pWaitSemaphores = &_renderSemaphore;
     presentInfo.waitSemaphoreCount = 1;
     presentInfo.pImageIndices = &swapchainImageIndex;
-    VK_CHECK(vkQueuePresentKHR(_graphicsQueue, &presentInfo));
+    abortOnFail(vkQueuePresentKHR(_graphicsQueue, &presentInfo));
     frameNumber++;
+}
+
+inline VkShaderModule VkEngine::loadShaderModule(std::string moduleName, std::string entryName)
+{
+    auto [binaryCode, codeSize] = compiler.getCodeData(moduleName, entryName);
+    VkShaderModuleCreateInfo createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    createInfo.codeSize = codeSize;
+    createInfo.pCode = binaryCode;
+
+    VkShaderModule shaderModule = VK_NULL_HANDLE;
+    if (vkCreateShaderModule(_device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
+    {
+        assert(0 && "failed to create shader module!");
+    }
+
+    return shaderModule;
 }
 
 void VkEngine::render()

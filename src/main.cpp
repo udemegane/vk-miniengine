@@ -1,10 +1,10 @@
 #include <VkEngine.h>
-#include <slang-com-ptr.h>
-#include <slang.h>
+#include <shaderCompiler.h>
 
 int main()
 {
-    VkEngine engine;
+    SlangShaderCompiler compiler("glsl_460");
+    VkEngine engine(compiler, 1600, 900);
     engine.init();
     engine.run();
     engine.cleanup();
