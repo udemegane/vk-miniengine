@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "vk-miniengine",
+  "version": "0.1.0",
+  "dependencies": [
+    "spdlog",
+    "tinyobjloader",
+    "vk-bootstrap",
+    "stb",
+    "glm",
+    "fastgltf",
+    "magic-enum"
+  ]
+}

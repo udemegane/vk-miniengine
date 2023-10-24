@@ -1,3 +1,6 @@
+
+setlocal
+
 echo Updating git submodules ...
 where /q git
 if errorlevel 1 (
@@ -10,9 +13,13 @@ if errorlevel 1 (
 
 echo Fetching dependencies by vcpkg ...
 where /q vcpkg
-if errorlevel 1 (
-    echo Cannot find vcpkg on PATH! Please install vcpkg and set the PATH, or install dependencies manually.
-    exit /b 1
-) ELSE (
-    vcpkg install spdlog tinyobjloader vk-bootstrap stb glm fastgltf --triplet x64-windows
+if not exist %~dp0\tools\vcpkg (
+    echo vcpkg is not found. Try to install it...
+    cd %~dp0\tools
+    git clone https://github.com/Microsoft/vcpkg.git
+    call .\vcpkg\bootstrap-vcpkg.bat
 )
+
+echo Setup complete. 
+
+endlocal
